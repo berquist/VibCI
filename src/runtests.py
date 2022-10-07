@@ -10,6 +10,8 @@
 import subprocess
 import sys
 import os
+from pathlib import Path
+import argparse
 
 #Classes
 class ClrSet:
@@ -39,23 +41,15 @@ line += "****************************************************************"
 line += '\n'
 print(line)
 
-#Check for help
-if (len(sys.argv) >= 2):
-  #Print help if arguments are given
-  line = ""
-  line += "Usage:"
-  line += '\n'
-  line += " user:$ ./runtests"
-  line += '\n'
-  print(line)
+parser = argparse.ArgumentParser()
+parser.add_argument("lovci_path", type=Path)
+args = parser.parse_args()
+lovci_path = args.lovci_path.resolve()
+assert lovci_path.exists()
 
-#Extract CPUs
-try:
-  cmd = "echo ${OMP_NUM_THREADS}"
-  Ncpus = subprocess.check_output(cmd,shell=True)
-  Ncpus = Ncpus.strip() #Saved as a string
-except:
-  Ncpus = "1"
+Ncpus = subprocess.check_output("echo ${OMP_NUM_THREADS}",shell=True).decode("utf-8").strip()
+if not Ncpus:
+    Ncpus = "1"
 
 #Print output
 result = "Running tests with "
@@ -71,8 +65,7 @@ os.chdir("Harmonic")
 result = ""
 ZPE = ""
 RunTime = ""
-cmd = "lovci -n "+Ncpus+" -i Harm.inp -o Spect.txt > Log.txt"
-subprocess.call(cmd,shell=True)
+ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i Harm.inp -o Spect.txt > Log.txt",shell=True)
 ifile = open("Log.txt")
 data = ifile.readlines()
 ifile.close()
@@ -101,8 +94,7 @@ os.chdir("1D_cubic")
 result = ""
 ZPE = ""
 RunTime = ""
-cmd = "lovci -n "+Ncpus+" -i Cubic.inp -o Spect.txt > Log.txt"
-subprocess.call(cmd,shell=True)
+ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i Cubic.inp -o Spect.txt > Log.txt",shell=True)
 ifile = open("Log.txt")
 data = ifile.readlines()
 ifile.close()
@@ -131,8 +123,7 @@ os.chdir("C2v_pot")
 result = ""
 ZPE = ""
 RunTime = ""
-cmd = "lovci -n "+Ncpus+" -i C2v.inp -o Spect.txt > Log.txt"
-subprocess.call(cmd,shell=True)
+ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i C2v.inp -o Spect.txt > Log.txt",shell=True)
 ifile = open("Log.txt")
 data = ifile.readlines()
 ifile.close()
