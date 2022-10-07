@@ -1,4 +1,4 @@
-find_package(Python3 REQUIRED)
+find_package(Python3 3.6 REQUIRED COMPONENTS Interpreter)
 
 macro(add_lovci_test TEST_NAME)
     add_test(
