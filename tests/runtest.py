@@ -43,6 +43,7 @@ print(line)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("lovci_path", type=Path)
+parser.add_argument("test_case")
 args = parser.parse_args()
 lovci_path = args.lovci_path.resolve()
 assert lovci_path.exists()
@@ -60,8 +61,9 @@ result += '\n'
 result += "Test results:"
 print(result)
 
-#First test (harmonic)
-os.chdir("Harmonic")
+rv = 0
+
+os.chdir(args.test_case)
 result = ""
 ZPE = ""
 RunTime = ""
@@ -81,68 +83,9 @@ if (ZPE == ref):
   result += ClrSet.TPass+"Pass"+ClrSet.Reset+", "
 else:
   result += ClrSet.TFail+"Fail"+ClrSet.Reset+", "
+  rv += 1
 result += RunTime
 print(result)
-cmd = "rm -f Spect.txt Log.txt"
-subprocess.call(cmd,shell=True)
-os.chdir("../")
-
-#Second test (1D cubic)
-os.chdir("1D_cubic")
-result = ""
-ZPE = ""
-RunTime = ""
-ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i input -o Spect.txt > Log.txt",shell=True)
-data = Path("Log.txt").read_text().splitlines()
-ref = Path("ref").read_text().strip()
-for line in data:
-  line = line.strip()
-  line = line.split()
-  if (len(line) > 3):
-    if (line[0] == "Zero-point"):
-      ZPE = line[2]
-    if ((line[0] == "Run") and (line[1] == "time:")):
-      RunTime = line[2]+" "+line[3]
-result += " Anharmonic oscillator:    "
-if (ZPE == ref):
-  result += ClrSet.TPass+"Pass"+ClrSet.Reset+", "
-else: 
-  result += ClrSet.TFail+"Fail"+ClrSet.Reset+", "
-result += RunTime
-print(result)
-cmd = "rm -f Spect.txt Log.txt"
-subprocess.call(cmd,shell=True)
-os.chdir("../")
-
-#Third test (C2v potential)
-os.chdir("C2v_pot")
-result = ""
-ZPE = ""
-RunTime = ""
-ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i input -o Spect.txt > Log.txt",shell=True)
-data = Path("Log.txt").read_text().splitlines()
-ref = Path("ref").read_text().strip()
-for line in data:
-  line = line.strip()
-  line = line.split()
-  if (len(line) > 3):
-    if (line[0] == "Zero-point"):
-      ZPE = line[2]
-    if ((line[0] == "Run") and (line[1] == "time:")):
-      RunTime = line[2]+" "+line[3]
-result += " Four mode progression:    "
-if (ZPE == ref):
-  result += ClrSet.TPass+"Pass"+ClrSet.Reset+", "
-else:
-  result += ClrSet.TFail+"Fail"+ClrSet.Reset+", "
-result += RunTime
-print(result)
-cmd = "rm -f Spect.txt Log.txt"
-subprocess.call(cmd,shell=True)
-os.chdir("../")
-
-#Print results
-result = '\n'
-result += "Done."
-result += '\n'
-print(result)
+# cmd = "rm -f Spect.txt Log.txt"
+# ret = subprocess.run(cmd,shell=True)
+sys.exit(rv)
