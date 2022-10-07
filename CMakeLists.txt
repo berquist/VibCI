@@ -11,3 +11,6 @@ add_executable(lovci
     src/LOVCI.cpp
 )
 target_link_libraries(lovci Eigen3::Eigen OpenMP::OpenMP_CXX)
+
+enable_testing()
+add_subdirectory(tests)
