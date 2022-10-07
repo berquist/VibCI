@@ -66,9 +66,8 @@ result = ""
 ZPE = ""
 RunTime = ""
 ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i input -o Spect.txt > Log.txt",shell=True)
-ifile = open("Log.txt")
-data = ifile.readlines()
-ifile.close()
+data = Path("Log.txt").read_text().splitlines()
+ref = Path("ref").read_text().strip()
 for line in data:
   line = line.strip()
   line = line.split()
@@ -77,9 +76,8 @@ for line in data:
       ZPE = line[2]
     if ((line[0] == "Run") and (line[1] == "time:")):
       RunTime = line[2]+" "+line[3]
-data = []
 result += " Harmonic oscillator:      "
-if (ZPE == "2825.00"):
+if (ZPE == ref):
   result += ClrSet.TPass+"Pass"+ClrSet.Reset+", "
 else:
   result += ClrSet.TFail+"Fail"+ClrSet.Reset+", "
@@ -95,9 +93,8 @@ result = ""
 ZPE = ""
 RunTime = ""
 ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i input -o Spect.txt > Log.txt",shell=True)
-ifile = open("Log.txt")
-data = ifile.readlines()
-ifile.close()
+data = Path("Log.txt").read_text().splitlines()
+ref = Path("ref").read_text().strip()
 for line in data:
   line = line.strip()
   line = line.split()
@@ -106,9 +103,8 @@ for line in data:
       ZPE = line[2]
     if ((line[0] == "Run") and (line[1] == "time:")):
       RunTime = line[2]+" "+line[3]
-data = []
 result += " Anharmonic oscillator:    "
-if (ZPE == "497.57"):
+if (ZPE == ref):
   result += ClrSet.TPass+"Pass"+ClrSet.Reset+", "
 else: 
   result += ClrSet.TFail+"Fail"+ClrSet.Reset+", "
@@ -124,9 +120,8 @@ result = ""
 ZPE = ""
 RunTime = ""
 ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i input -o Spect.txt > Log.txt",shell=True)
-ifile = open("Log.txt")
-data = ifile.readlines()
-ifile.close()
+data = Path("Log.txt").read_text().splitlines()
+ref = Path("ref").read_text().strip()
 for line in data:
   line = line.strip()
   line = line.split()
@@ -135,9 +130,8 @@ for line in data:
       ZPE = line[2]
     if ((line[0] == "Run") and (line[1] == "time:")):
       RunTime = line[2]+" "+line[3]
-data = []
 result += " Four mode progression:    "
-if (ZPE == "4374.59"):
+if (ZPE == ref):
   result += ClrSet.TPass+"Pass"+ClrSet.Reset+", "
 else:
   result += ClrSet.TFail+"Fail"+ClrSet.Reset+", "
