@@ -65,7 +65,7 @@ os.chdir("Harmonic")
 result = ""
 ZPE = ""
 RunTime = ""
-ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i Harm.inp -o Spect.txt > Log.txt",shell=True)
+ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i input -o Spect.txt > Log.txt",shell=True)
 ifile = open("Log.txt")
 data = ifile.readlines()
 ifile.close()
@@ -94,7 +94,7 @@ os.chdir("1D_cubic")
 result = ""
 ZPE = ""
 RunTime = ""
-ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i Cubic.inp -o Spect.txt > Log.txt",shell=True)
+ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i input -o Spect.txt > Log.txt",shell=True)
 ifile = open("Log.txt")
 data = ifile.readlines()
 ifile.close()
@@ -123,7 +123,7 @@ os.chdir("C2v_pot")
 result = ""
 ZPE = ""
 RunTime = ""
-ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i C2v.inp -o Spect.txt > Log.txt",shell=True)
+ret = subprocess.run(f"{lovci_path} -n {Ncpus} -i input -o Spect.txt > Log.txt",shell=True)
 ifile = open("Log.txt")
 data = ifile.readlines()
 ifile.close()
