@@ -17,9 +17,11 @@ if not ncpus:
 
 os.chdir(args.test_case)
 zpe = ""
-ret = subprocess.run(
-    f"{lovci_path} -n {ncpus} -i input -o Spect.txt > Log.txt", shell=True, check=True
-)
+cmd = f"{lovci_path} -n {ncpus} -i input -o Spect.txt > Log.txt"
+print(cmd)
+ret = subprocess.run(cmd, shell=True, check=True)
+if ret.returncode != 0:
+    sys.exit(ret.returncode)
 data = Path("Log.txt").read_text().splitlines()
 ref = Path("ref").read_text().strip()
 for line in data:
@@ -29,5 +31,4 @@ for line in data:
             zpe = line[2]
 rv = 0
 if zpe != ref:
-    rv += 1
-sys.exit(rv)
+    sys.exit(1)

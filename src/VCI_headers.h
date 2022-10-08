@@ -55,10 +55,6 @@ const double k = 0.69503476; //Boltzmann constant (cm^-1)
 //Global derived constants
 const double h = 2*pi; //Planck constant (cm^-1)
 
-//Timers
-int StartTime = 0; //Time the calculation starts
-int EndTime = 0; //Time the calculation ends
-
 //Custom classes
 class HOFunc
 {
@@ -86,20 +82,23 @@ class FConst
     vector<int> fcpow; //Modes and powers for the force constant
 };
 
-//Global variables
-bool GauBroad = 0; //Use Gaussian broadening instead of Lorentzian
-int Ncpus = 0; //Number of CPUs for the calculations
-double LorentzWid = 1; //Width of the peaks in the final spectrum
-double DeltaFreq = 0.01; //Spectrum resolution
-double FreqCut = 5000; //Cutoff for the spectrum
-vector<WaveFunction> BasisSet; //Full basis set
-vector<HOFunc> SpectModes; //List of spectator modes
-vector<FConst> AnharmFC; //List of force constants
+struct ProgramState {
+  bool GauBroad; //Use Gaussian broadening instead of Lorentzian
+  int Ncpus; //Number of CPUs for the calculations
+  double LorentzWid; //Width of the peaks in the final spectrum
+  double DeltaFreq; //Spectrum resolution
+  double FreqCut; //Cutoff for the spectrum
+  vector<WaveFunction> BasisSet; //Full basis set
+  vector<HOFunc> SpectModes; //List of spectator modes
+  vector<FConst> AnharmFC; //List of force constants
+  int StartTime; //Time the calculation starts
+  int EndTime; //Time the calculation ends
+};
 
 //Function declarations (alphabetical)
-void AnharmHam(MatrixXd&);
+void AnharmHam(MatrixXd& H, const vector<WaveFunction> &BasisSet, const vector<FConst> &AnharmFC);
 
-double AnharmPot(int,int,FConst&);
+double AnharmPot(int n, int m, const FConst& fc, const vector<WaveFunction> &BasisSet);
 
 void AnnihilationLO(double&,int&);
 
@@ -117,23 +116,18 @@ double LBroaden(double,double,double);
 
 void PrintFancyTitle();
 
-void PrintSpectrum(VectorXd&,MatrixXd&,fstream&);
+void PrintSpectrum(VectorXd& Freqs, MatrixXd& Psi, fstream& outfile, double LorentzWid, double FreqCut, int Ncpus, const vector<HOFunc> &SpectModes, bool GauBroad, const vector<WaveFunction> &BasisSet, double DeltaFreq);
 
-void ReadCIArgs(int,char*,fstream&,fstream&);
+void ReadCIArgs(int argc, char* argv[], fstream& vcidata, fstream& spectfile, ProgramState &ps);
 
-void ReadCIInput(MatrixXd&,fstream&);
+void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata, ProgramState &ps);
 
-void ScaleFC();
+void ScaleFC(vector<FConst> &AnharmFC);
 
-bool ScreenState(int,int,FConst&);
+bool ScreenState(int n, int m, const FConst& fc, const vector<WaveFunction> &BasisSet);
 
 void VCIDiagonalize(MatrixXd&,MatrixXd&,VectorXd&);
 
-void ZerothHam(MatrixXd&);
+void ZerothHam(MatrixXd& H, const vector<WaveFunction> &BasisSet, const vector<HOFunc> &SpectModes);
 
-//Function definitions (alphabetical)
-#include "Core_functions.cpp"
-#include "Input_Reader.cpp"
-#include "Ladder.cpp"
-
-#endif
+#endif // VCI_HEADERS

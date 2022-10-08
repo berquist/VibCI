@@ -11,8 +11,10 @@
 
 */
 
+#include "VCI_headers.h"
+
 //Ladder operators
-inline void CreationLO(double& ci, int& ni)
+void CreationLO(double& ci, int& ni)
 {
   //Creation ladder operator
   ci *= sqrt(ni+1); //Update coefficient
@@ -20,7 +22,7 @@ inline void CreationLO(double& ci, int& ni)
   return;
 };
 
-inline void AnnihilationLO(double& ci, int& ni)
+void AnnihilationLO(double& ci, int& ni)
 {
   //Annihilation ladder operator
   ci *= sqrt(ni); //Update coefficient
@@ -34,7 +36,7 @@ inline void AnnihilationLO(double& ci, int& ni)
   return;
 };
 
-double AnharmPot(int n, int m, FConst& fc)
+double AnharmPot(int n, int m, const FConst& fc, const vector<WaveFunction> &BasisSet)
 {
   //Calculate anharmonic matrix elements for <m|H|n>
   double Vnm = 0;
@@ -139,7 +141,7 @@ double AnharmPot(int n, int m, FConst& fc)
 };
 
 //Hamiltonian operators
-void ZerothHam(MatrixXd& H)
+void ZerothHam(MatrixXd& H, const vector<WaveFunction> &BasisSet, const vector<HOFunc> &SpectModes)
 {
   //Calculate the harmonic Hamiltonian matrix elements
   double Espec = 0; //Spectator mode ZPE energy
@@ -172,7 +174,7 @@ void ZerothHam(MatrixXd& H)
   return;
 };
 
-void AnharmHam(MatrixXd& H)
+void AnharmHam(MatrixXd& H, const vector<WaveFunction> &BasisSet, const vector<FConst> &AnharmFC)
 {
   //Add anharmonic terms to the Hamiltonian
   #pragma omp parallel for
@@ -183,10 +185,10 @@ void AnharmHam(MatrixXd& H)
       double Vij = 0;
       for (unsigned int k=0;k<AnharmFC.size();k++)
       {
-        if (ScreenState(i,j,AnharmFC[k]))
+        if (ScreenState(i,j,AnharmFC[k],BasisSet))
         {
           //Add anharmonic matrix elements
-          Vij += AnharmPot(i,j,AnharmFC[k]);
+          Vij += AnharmPot(i,j,AnharmFC[k],BasisSet);
         }
       }
       H(i,j) += Vij;
@@ -196,7 +198,7 @@ void AnharmHam(MatrixXd& H)
 };
 
 //Utility functions
-inline void VCIDiagonalize(MatrixXd& H, MatrixXd& Psi, VectorXd& E)
+void VCIDiagonalize(MatrixXd& H, MatrixXd& Psi, VectorXd& E)
 {
   //Wrapper for the Eigen diagonalization
   EigenSolver<MatrixXd> SE; //Schrodinger equation
@@ -206,7 +208,7 @@ inline void VCIDiagonalize(MatrixXd& H, MatrixXd& Psi, VectorXd& E)
   return;
 };
 
-inline double LBroaden(double fi, double f, double wid)
+double LBroaden(double fi, double f, double wid)
 {
   //Function to calculate the Lorentz width
   double lint; //Lorentz intensity
@@ -218,7 +220,7 @@ inline double LBroaden(double fi, double f, double wid)
   return lint;
 };
 
-inline double GBroaden(double fi, double f, double wid)
+double GBroaden(double fi, double f, double wid)
 {
   //Function to calculate the Gaussian width
   double gint; //Lorentz intensity
@@ -231,7 +233,7 @@ inline double GBroaden(double fi, double f, double wid)
   return gint;
 };
 
-int IsFund(WaveFunction& bfunc)
+int IsFund(const WaveFunction& bfunc)
 {
   //Tests if a basis functionis a fundamental transition
   int fund = -1;
@@ -253,7 +255,7 @@ int IsFund(WaveFunction& bfunc)
   return fund;
 };
 
-bool ScreenState(int n, int m, FConst& fc)
+bool ScreenState(int n, int m, const FConst& fc, const vector<WaveFunction> &BasisSet)
 {
   //Function for ignoring states that have no overlap
   bool keepstate = 1; //Assume the state is good
@@ -331,7 +333,7 @@ bool ScreenState(int n, int m, FConst& fc)
   return keepstate;
 };
 
-void PrintSpectrum(VectorXd& Freqs, MatrixXd& Psi, fstream& outfile)
+void PrintSpectrum(VectorXd& Freqs, MatrixXd& Psi, fstream& outfile, double LorentzWid, double FreqCut, int Ncpus, const vector<HOFunc> &SpectModes, bool GauBroad, const vector<WaveFunction> &BasisSet, double DeltaFreq)
 {
   //Function to print the CI spectrum
   double Fmin = 0; //Start of the spectrum
@@ -415,7 +417,7 @@ void PrintSpectrum(VectorXd& Freqs, MatrixXd& Psi, fstream& outfile)
   return;
 };
 
-void ScaleFC()
+void ScaleFC(vector<FConst> &AnharmFC)
 {
   //Adjust force constants for permutations and sqrt(2) terms
   for (unsigned int i=0;i<AnharmFC.size();i++)

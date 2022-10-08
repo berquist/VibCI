@@ -11,6 +11,8 @@
 
 */
 
+#include "VCI_headers.h"
+
 //Core utility functions
 void PrintFancyTitle()
 {

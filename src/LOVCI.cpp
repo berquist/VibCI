@@ -16,8 +16,16 @@
 
 int main(int argc, char* argv[])
 {
+  ProgramState ps {
+    .GauBroad = false,
+    .Ncpus = 0,
+    .LorentzWid = 1.0,
+    .DeltaFreq = 1.0e-2,
+    .FreqCut = 5000.0
+  };
+
   //Misc. initialization
-  StartTime = (unsigned)time(0); //Time the program starts
+  ps.StartTime = (unsigned)time(0); //Time the program starts
   cout.precision(12);
   cout << fixed;
   //End of section
@@ -43,12 +51,12 @@ int main(int argc, char* argv[])
 
   //Gather input and check for errors
   cout << "Reading input..." << '\n';
-  ReadCIArgs(argc,argv,vcidata,spectfile); //Read arguments
-  ReadCIInput(VCIHam,vcidata); //Read input files
+  ReadCIArgs(argc,argv,vcidata,spectfile,ps); //Read arguments
+  ReadCIInput(VCIHam,vcidata,ps); //Read input files
   //End of section
 
   //Adjust force constants
-  ScaleFC();
+  ScaleFC(ps.AnharmFC);
   //End of section
 
   //Calculate spectrum
@@ -56,11 +64,11 @@ int main(int argc, char* argv[])
   cout << '\n';
   cout << "  Zeroth-order Hamiltionian";
   cout.flush(); //Print progress
-  ZerothHam(VCIHam); //Harmonic terms
+  ZerothHam(VCIHam,ps.BasisSet,ps.SpectModes); //Harmonic terms
   cout << "; Done." << '\n';
   cout << "  Adding anharmonic potential";
   cout.flush(); //Print progress
-  AnharmHam(VCIHam); //Anharmonic terms
+  AnharmHam(VCIHam,ps.BasisSet,ps.AnharmFC); //Anharmonic terms
   cout << "; Done." << '\n';
   cout << '\n';
   cout << "Diagonalizing the Hamiltonian...";
@@ -74,7 +82,7 @@ int main(int argc, char* argv[])
   //End of section
 
   //Calculate and remove ZPE
-  VectorXd UnitVec(BasisSet.size()); //Create a unit vector
+  VectorXd UnitVec(ps.BasisSet.size()); //Create a unit vector
   UnitVec.setOnes(); //Subtracting a constant requires a vector
   Ezpe = CIFreq.minCoeff(); //Find ZPE
   if (Ezpe < 0)
@@ -109,9 +117,9 @@ int main(int argc, char* argv[])
   cout.precision(12); //Replace settings
   cout << '\n';
   cout.flush(); //Print progress
-  PrintSpectrum(CIFreq,CIVec,spectfile); //Convert the frequencies to a spectrum
-  EndTime = (unsigned)time(0); //Time the calculation stops
-  RunTime = (double)(EndTime-StartTime); //Total run time
+  PrintSpectrum(CIFreq,CIVec,spectfile,ps.LorentzWid,ps.FreqCut,ps.Ncpus,ps.SpectModes,ps.GauBroad,ps.BasisSet,ps.DeltaFreq); //Convert the frequencies to a spectrum
+  ps.EndTime = (unsigned)time(0); //Time the calculation stops
+  RunTime = (double)(ps.EndTime-ps.StartTime); //Total run time
   if (RunTime >= 3600)
   {
     //Switch to hours

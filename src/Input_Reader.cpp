@@ -11,13 +11,16 @@
 
 */
 
+#include "VCI_headers.h"
+
 //Input reader
-void ReadCIArgs(int argc, char* argv[], fstream& vcidata, fstream& spectfile)
+void ReadCIArgs(int argc, char* argv[], fstream& vcidata, fstream& spectfile, ProgramState &ps)
 {
   //Function to read the command line arguments
   bool DoQuit = 0; //Exit if an error is detected
   string dummy; //Generic string
   stringstream call; //Stream for system calls and reading/writing files
+  int Ncpus;
   //Read command line arguments
   if (argc == 1)
   {
@@ -142,10 +145,13 @@ void ReadCIArgs(int argc, char* argv[], fstream& vcidata, fstream& spectfile)
   }
   //Set threads
   omp_set_num_threads(Ncpus);
+
+  ps.Ncpus = Ncpus;
+
   return;
 };
 
-void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata)
+void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata, ProgramState &ps)
 {
   //Function to read the input files
   string dummy; //Generic sting
@@ -158,6 +164,10 @@ void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata)
   int Nmodes = 0; //Number of different modes
   vector<HOFunc> BasisCount; //Temp. storage of modes
   int Nfc = 0; //Number of force constants
+  bool GauBroad;
+  double LorentzWid;
+  double DeltaFreq;
+  double FreqCut;
   //Read basis set type
   vcidata >> dummy >> dummy;
   if ((dummy == "Progression") or (dummy == "progression"))
@@ -244,7 +254,7 @@ void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata)
     vcidata >> tmp.Freq; //Frequency
     tmp.Quanta = 1; //Only one state
     vcidata >> tmp.ModeInt; //Intensity
-    SpectModes.push_back(tmp);
+    ps.SpectModes.push_back(tmp);
   }
   //Count states
   if (ProgSet)
@@ -288,7 +298,7 @@ void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata)
       tmp.fcpow.push_back(modej);
     }
     vcidata >> tmp.fc; //Read force constant value
-    AnharmFC.push_back(tmp);
+    ps.AnharmFC.push_back(tmp);
   }
   //Create data structures
   VCIHam = MatrixXd(Nmodes,Nmodes); //Create the Hamiltonian matrix
@@ -308,7 +318,7 @@ void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata)
       //Save basis function component
       GroundState.Modes.push_back(tmp);
     }
-    BasisSet.push_back(GroundState); //Ground state reference
+    ps.BasisSet.push_back(GroundState); //Ground state reference
     for (unsigned int i=0;i<BasisCount.size();i++)
     {
       //Add 1D modes
@@ -334,7 +344,7 @@ void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata)
           //Save basis function component
           temp.Modes.push_back(tmp);
         }
-      BasisSet.push_back(temp);
+      ps.BasisSet.push_back(temp);
       }
     }
     //Add combination bands
@@ -367,7 +377,7 @@ void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata)
           //Save basis function component
           temp.Modes.push_back(tmp);
         }
-      BasisSet.push_back(temp);
+      ps.BasisSet.push_back(temp);
       }
     }
   }
@@ -382,15 +392,15 @@ void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata)
       tmp.ModeInt = BasisCount[0].ModeInt;
       tmp.Quanta = i;
       temp.Modes.push_back(tmp);
-      BasisSet.push_back(temp);
+      ps.BasisSet.push_back(temp);
     }
     for (unsigned int i=1;i<BasisCount.size();i++)
     {
       vector<WaveFunction> NewBasis;
       for (int j=0;j<(BasisCount[i].Quanta+1);j++)
       {
-        vector<WaveFunction> BasisCopy = BasisSet;
-        for (unsigned int k=0;k<BasisSet.size();k++)
+        vector<WaveFunction> BasisCopy = ps.BasisSet;
+        for (unsigned int k=0;k<ps.BasisSet.size();k++)
         {
           HOFunc tmp;
           //Copy data
@@ -406,22 +416,22 @@ void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata)
           NewBasis.push_back(BasisCopy[n]);
         }
       }
-      BasisSet = NewBasis;
+      ps.BasisSet = NewBasis;
     }
   }
   //Correct array lengths
-  for (unsigned int i=0;i<BasisSet.size();i++)
+  for (unsigned int i=0;i<ps.BasisSet.size();i++)
   {
     //Update counter
-    BasisSet[i].M = BasisSet[i].Modes.size();
+    ps.BasisSet[i].M = ps.BasisSet[i].Modes.size();
   }
   //Print settings
   cout << "General settings:" << '\n';
-  cout << "  Threads: " << Ncpus << '\n';
+  cout << "  Threads: " << ps.Ncpus << '\n';
   cout << '\n';
   cout << "Spectrum settings:" << '\n';
   cout << "  Active modes: " << BasisCount.size() << '\n';
-  cout << "  Spectator modes: " << SpectModes.size() << '\n';
+  cout << "  Spectator modes: " << ps.SpectModes.size() << '\n';
   cout << "  Broadening: ";
   if (GauBroad)
   {
@@ -452,7 +462,7 @@ void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata)
   {
     cout << "Product" << '\n';
   }
-  cout << "  Basis functions: " << BasisSet.size() << '\n';
+  cout << "  Basis functions: " << ps.BasisSet.size() << '\n';
   cout << "  Force constants: ";
   if (Nfc == 0)
   {
@@ -460,10 +470,16 @@ void ReadCIInput(MatrixXd& VCIHam, fstream& vcidata)
   }
   else
   {
-    cout << AnharmFC.size() << '\n';
+    cout << ps.AnharmFC.size() << '\n';
   }
   cout << '\n';
   cout.flush();
+
+  ps.GauBroad = GauBroad;
+  ps.LorentzWid = LorentzWid;
+  ps.DeltaFreq = DeltaFreq;
+  ps.FreqCut = FreqCut;
+
   return;
 };
 
